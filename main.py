@@ -7,8 +7,8 @@ import matplotlib.cm as cm
 import scipy.stats as sc
 
 colors = cm.rainbow(np.linspace(0, 1, 10))
-X = np.loadtxt('../../Downloads/datax.txt')
-Y = np.loadtxt('../../Downloads/datay.txt')
+X = np.loadtxt('datax.txt')
+Y = np.loadtxt('datay.txt')
 Y = Y - np.mean(Y)
 
 
@@ -32,7 +32,7 @@ def plot_subgraph_fig1(x_axis, y_axis, color):
     plt.plot(xy[0], xy[1], c=color)
 
 
-def Select_lam(n, r, delta, lam, X, Y):
+def Gibbs_sampler_noupdate_lambda(n, r, delta, lam, X, Y):
     # Initialization
     Y = Y - np.mean(Y)
     beta = [np.random.uniform(size=X.shape[1])]
@@ -95,7 +95,7 @@ def Optimize(type, choose_lam):
             return beta
 
         elif type == 'bayes':
-            Beta = Gibbs_sampler_lambda(10000, 1, 1.78, lam, X, Y)
+            Beta = Gibbs_sampler_noupdate_lambda(10000, 1, 1.78, lam, X, Y)
             Beta = np.array(Beta)
             return Beta
 
@@ -134,7 +134,7 @@ def Optimize(type, choose_lam):
         elif type == 'bayes':
             for lam in alphas:
                 print(lam)
-                Beta.append(Gibbs_sampler_lambda(10000, 1, 1.78,  lam, X, Y))
+                Beta.append(Gibbs_sampler_lambda(10000, 1, 1.78, lam, X, Y)[0])
             Beta = np.array(Beta)
             return Beta
 
@@ -203,7 +203,8 @@ if __name__ == "__main__":
     test_MSE_bayes = []
     test_MSE_ols = []
     for i in range(10):
-        b_beta, lam = Select_lam(100, 1, 1, x[100 * i:100 * i + 100, :], y[100 * i:100 * i + 100])
+        b_beta, lam = Gibbs_sampler_lambda(100, 1, 1, x[100 * i:100 * i + 100, :], y[100 * i:100 * i + 100],
+                                           np.random.uniform())
         b_beta = np.array(b_beta)
         b_beta = b_beta[-1, :]
         clf = linear_model.LinearRegression()
@@ -232,11 +233,11 @@ if __name__ == "__main__":
         for i in range(30):
             if i == 0:
                 lambda_ = np.sqrt(
-                    2 * X.shape[1] / sum(np.mean(Gibbs_sampler_lambda(1000, 1, 1.78, init_lam)[1], axis=0)))
+                    2 * X.shape[1] / sum(np.mean(Gibbs_sampler_lambda(1000, 1, 1.78, X, Y, init_lam)[1], axis=0)))
                 lam.append(lambda_)
             else:
                 lambda_ = np.sqrt(
-                    2 * X.shape[1] / sum(np.mean(Gibbs_sampler_lambda(1000, 1, 1.78, lambda_)[1], axis=0)))
+                    2 * X.shape[1] / sum(np.mean(Gibbs_sampler_lambda(1000, 1, 1.78, X, Y, lambda_)[1], axis=0)))
                 lam.append(lambda_)
             print(i)
 
